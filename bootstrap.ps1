@@ -1,12 +1,32 @@
 param (
-    [switch]$Recommended,
-    [string]$Email
+    [switch]$Recommended
 )
 
-if (-not $Email) {
-    Write-Output "Error: Specify your email with boothstrap --email='<email>' ..."
+$fileName = "outstem_bootstrap.json"
+$filePath = Join-Path -Path $env:USERPROFILE -ChildPath $fileName
+
+# Check if config file exists
+if (Test-Path $filePath) {
+    Write-Output "Config File found at: $filePath"
+} else {
+    Write-Output "Error: Outstem bootstrap config file not found in the home directory."
     exit
 }
+
+$jsonContent = Get-Content -Path $filePath -Raw
+$data = $jsonContent | ConvertFrom-Json
+
+$requiredFields = @("githubEmail", "githubUsername", "githubToken", "outstemAwsAccessKeyId", "outstemAwsAccessKeySecret")
+$missingFields = $requiredFields | Where-Object { $_ -notin $data.PSObject.Properties.Name }
+
+if ($missingFields.Count -eq 0) {
+    Write-Output "All fields exist."
+} else {
+    Write-Output "The following required fields are missing in your config:"
+    Write-Output "$($missingFields -join ', ')."
+    exit
+}
+
 
 # Set execution policy to allow script running
 Set-ExecutionPolicy Bypass -Scope Process -Force
