@@ -27,6 +27,30 @@ if ($missingFields.Count -eq 0) {
     exit
 }
 
+if ($data.sshKeyLocation -ne $null) {
+    ssh-keygen -t ed25519 -C "$data.githubEmail" -f $data.sshKeyLocation
+} else {
+    $data | Add-Member -MemberType NoteProperty -Name "sshKeyLocation" -Value "$env:USERPROFILE/.ssh/test"
+}
+
+ssh-keygen -t ed25519 -C "$data.githubEmail" -f $data.sshKeyLocation
+Write-Output ""
+Write-Output "Add this key below to your GitHub account"
+cat $data.sshKeyLocation
+Write-Output ""
+
+do {
+    $userInput = Read-Host "Type anything to test your connection"
+    
+    ssh -T git@github.com
+    
+    if ($LASTEXITCODE) {
+        Write-Output "Succesfully authenticated"
+        break
+    } else {
+        Write-Output "Error: Authentication failed"
+    }
+} while ($true)
 
 # Set execution policy to allow script running
 Set-ExecutionPolicy Bypass -Scope Process -Force
