@@ -49,23 +49,36 @@ foreach ($package in $packages) {
     } else {
         Write-Output "$package installation failed."
     }
-    Write-Output "========================================"
     Write-Output ""
 }
 
 Write-Output "All installations completed."
 
+Write-Output ""
+Write-Output "========================================"
+Write-Output "Installing node via nvm "
+Write-Output "========================================"
+Write-Output ""
+nvm use latest
 
+if ($?) {
+    Write-Output "node installation succeeded."
+} else {
+    Write-Output "node installation failed."
+}
 
-# Enable WSL
+Write-Output ""
+Write-Output "========================================"
+Write-Output "Enabling WSL"
+Write-Output "========================================"
+Write-Output ""
+
 # Check if WSL 2 is already enabled
 $wsl2Enabled = (dism.exe /Online /Get-FeatureInfo /FeatureName:Microsoft-Windows-Subsystem-Linux-WSL2).State
 
 if ($wsl2Enabled -eq "Enabled") {
     Write-Output "WSL 2 is already enabled."
 } else {
-    # Enable WSL 2
-    Write-Output "Enabling WSL 2..."
     dism.exe /Online /Enable-Feature /FeatureName:VirtualMachinePlatform /NoRestart *>$null
     dism.exe /Online /Enable-Feature /FeatureName:Microsoft-Windows-Subsystem-Linux /NoRestart *>$null
 
@@ -75,8 +88,6 @@ if ($wsl2Enabled -eq "Enabled") {
     if ($?) {
         Write-Output "WSL 2 enabled successfully."
     } else {
-        Write-Output "WSL installation failed."
+        Write-Output "WSL setup failed."
     }
-
-
 }
