@@ -8,7 +8,8 @@ $filePath = Join-Path -Path $env:USERPROFILE -ChildPath $fileName
 # Check if config file exists
 if (Test-Path $filePath) {
     Write-Output "Config File found at: $filePath"
-} else {
+}
+else {
     Write-Output "Error: Outstem bootstrap config file not found in the home directory."
     exit
 }
@@ -21,7 +22,8 @@ $missingFields = $requiredFields | Where-Object { $_ -notin $data.PSObject.Prope
 
 if ($missingFields.Count -eq 0) {
     Write-Output "All fields exist."
-} else {
+}
+else {
     Write-Output "The following required fields are missing in your config:"
     Write-Output "$($missingFields -join ', ')."
     exit
@@ -29,7 +31,8 @@ if ($missingFields.Count -eq 0) {
 
 if ($data.sshKeyLocation -ne $null) {
     ssh-keygen -t ed25519 -C "$data.githubEmail" -f $data.sshKeyLocation
-} else {
+}
+else {
     $data | Add-Member -MemberType NoteProperty -Name "sshKeyLocation" -Value "$env:USERPROFILE/.ssh/test"
 }
 
@@ -47,10 +50,30 @@ do {
     if ($LASTEXITCODE) {
         Write-Output "Succesfully authenticated"
         break
-    } else {
+    }
+    else {
         Write-Output "Error: Authentication failed"
     }
 } while ($true)
+
+
+[Environment]::SetEnvironmentVariable("GH_TOKEN", $null, "Machine")
+[Environment]::SetEnvironmentVariable("GH_USERNAME", $null, "Machine")
+[Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_ID", $null, "Machine")
+[Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_SECRET", $null, "Machine")
+
+[Environment]::SetEnvironmentVariable("GH_TOKEN", $null, "User")
+[Environment]::SetEnvironmentVariable("GH_USERNAME", $null, "User")
+[Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_ID", $null, "User")
+[Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_SECRET", $null, "User")
+
+[System.Environment]::SetEnvironmentVariable("GH_TOKEN", $data.githubToken, "Machine")
+[System.Environment]::SetEnvironmentVariable("GH_USERNAME", $data.githubUsername, "Machine")
+[System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_ID", $data.outstemAwsAccessKeyId, "Machine")
+[System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_SECRET", $data.outstemAwsAccessKeyId, "Machine")
+
+Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
+refreshenv
 
 # Set execution policy to allow script running
 Set-ExecutionPolicy Bypass -Scope Process -Force
@@ -61,15 +84,10 @@ if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
     iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
     Write-Output "Chocolatey installation completed."
-} else {
+}
+else {
     Write-Output "Chocolatey is already installed."
 }
-
-
-[Environment]::SetEnvironmentVariable("TEST", "NEW TEST", [System.EnvironmentVariableTarget]::Machine)
-Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
-refreshenv
-
 
 # List of packages to install
 $basePackages = @('git', 'nvm', 'openjdk11', 'maven', 'ruby', 'docker-desktop')
@@ -90,7 +108,8 @@ foreach ($package in $packages) {
 
     if ($?) {
         Write-Output "$package installation succeeded."
-    } else {
+    }
+    else {
         Write-Output "$package installation failed."
     }
     Write-Output ""
@@ -106,7 +125,8 @@ nvm use latest *>$null
 
 if ($?) {
     Write-Output "node installation succeeded."
-} else {
+}
+else {
     Write-Output "node installation failed."
 }
 Write-Output ""
@@ -123,7 +143,8 @@ $wsl2Enabled = (dism.exe /Online /Get-FeatureInfo /FeatureName:Microsoft-Windows
 
 if ($wsl2Enabled -eq "Enabled") {
     Write-Output "WSL 2 is already enabled."
-} else {
+}
+else {
     dism.exe /Online /Enable-Feature /FeatureName:VirtualMachinePlatform /NoRestart *>$null
     dism.exe /Online /Enable-Feature /FeatureName:Microsoft-Windows-Subsystem-Linux /NoRestart *>$null
 
@@ -132,7 +153,8 @@ if ($wsl2Enabled -eq "Enabled") {
 
     if ($?) {
         Write-Output "WSL 2 enabled successfully."
-    } else {
+    }
+    else {
         Write-Output "WSL setup failed."
     }
 }
