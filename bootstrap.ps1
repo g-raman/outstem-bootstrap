@@ -58,14 +58,15 @@ Write-Output ""
 Write-Output "========================================"
 Write-Output "Installing node via nvm "
 Write-Output "========================================"
-Write-Output ""
-nvm use latest
+nvm use latest *>$null
 
 if ($?) {
     Write-Output "node installation succeeded."
 } else {
     Write-Output "node installation failed."
 }
+Write-Output ""
+
 
 Write-Output ""
 Write-Output "========================================"
