@@ -33,13 +33,14 @@ if ($data.sshKeyLocation -ne $null) {
     ssh-keygen -t ed25519 -C "$data.githubEmail" -f $data.sshKeyLocation
 }
 else {
-    $data | Add-Member -MemberType NoteProperty -Name "sshKeyLocation" -Value "$env:USERPROFILE/.ssh/test"
+    $data | Add-Member -MemberType NoteProperty -Name "sshKeyLocation" -Value "$env:USERPROFILE/.ssh/id_ed25519"
 }
 
-ssh-keygen -t ed25519 -C "$data.githubEmail" -f $data.sshKeyLocation
+ssh-keygen -t ed25519 -C $data.githubEmail -f $data.sshKeyLocation
 Write-Output ""
 Write-Output "Add this key below to your GitHub account"
-cat $data.sshKeyLocation
+$sshKeyFile = $data.sshKeyLocation + ".pub"
+cat $sshKeyFile
 Write-Output ""
 
 do {
@@ -90,7 +91,7 @@ else {
 }
 
 # List of packages to install
-$basePackages = @('git', 'nvm', 'openjdk11', 'maven', 'ruby', 'docker-desktop')
+$basePackages = @('git', 'nvm', 'openjdk11', 'maven', 'ruby', 'docker')
 $recommendedPackages = @('tabby', 'intellijidea-community', 'dbeaver', 'vscode')
 
 $packages = $basePackages
@@ -134,9 +135,28 @@ Write-Output ""
 
 Write-Output ""
 Write-Output "========================================"
+Write-Output "Configuring .npmrc"
+Write-Output "========================================"
+$npmrcFilename = ".npmrc"
+$npmrcFilepath = Join-Path -Path $env:USERPROFILE -ChildPath $npmrcFilename
+$npmrcConfig = "@aes-outreach:registry=https://npm.pkg.github.com/
+//npm.pkg.github.com/:_authToken=" + $data.githubToken
+
+Add-Content -Path $npmrcFilepath -Value $npmrcConfig
+Write-Output ".npmrc configured"
+
+Write-Output ""
+Write-Output "========================================"
+Write-Output "Install Oustem CLI"
+Write-Output "========================================"
+npm i -g @aes-outreach/outstem-cli *>$null
+
+Write-Output "Outstem CLI installed"
+
+Write-Output ""
+Write-Output "========================================"
 Write-Output "Enabling WSL"
 Write-Output "========================================"
-Write-Output ""
 
 # Check if WSL 2 is already enabled
 $wsl2Enabled = (dism.exe /Online /Get-FeatureInfo /FeatureName:Microsoft-Windows-Subsystem-Linux-WSL2).State
