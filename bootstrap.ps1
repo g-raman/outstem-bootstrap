@@ -60,7 +60,7 @@ if ($missingFields.Count -eq 0) {
 }
 else {
     Write-ErrorMessage "The following required fields are missing in your config:"
-    Write-Output "$($missingFields -join ', ')."
+    Write-ErrorMessage "$($missingFields -join ', ')."
     exit
 }
 Write-Output ""
