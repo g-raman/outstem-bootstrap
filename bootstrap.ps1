@@ -200,7 +200,7 @@ function setupDeps () {
   # Install basic packages
   foreach ($package in $packages) {
     Write-Output ""
-    Write-Header "Install $package..."
+    Write-Header "Installing $package..."
 
     choco install $package -y *> $null
 
