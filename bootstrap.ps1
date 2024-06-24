@@ -1,5 +1,5 @@
 param(
-  [switch]$Recommended,
+  [switch]$SkipRecommended,
   [switch]$SkipSSH,
   [switch]$SkipEnv,
   [switch]$SkipWSL,
@@ -193,7 +193,7 @@ function setupDeps () {
   $recommendedPackages = @('tabby','intellijidea-community','dbeaver','vscode')
 
   $packages = $basePackages
-  if ($Recommended) {
+  if (-not ($SkipRecommended)) {
     $packages += $recommendedPackages
   }
 
