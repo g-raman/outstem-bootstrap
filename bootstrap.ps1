@@ -1,6 +1,8 @@
 param (
     [switch]$Recommended,
-    [switch]$SkipSSH
+    [switch]$SkipSSH,
+    [switch]$SkipEnv,
+    [switch]$SkipWSL
 )
 
 function Write-SuccessMessage {
@@ -101,24 +103,34 @@ if ($SkipSSH) {
 }
 
 
-Write-Header "Setting up environment variables"
-# Reset Environment variables
-[Environment]::SetEnvironmentVariable("GH_TOKEN", $null, "Machine")
-[Environment]::SetEnvironmentVariable("GH_USERNAME", $null, "Machine")
-[Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_ID", $null, "Machine")
-[Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_SECRET", $null, "Machine")
+function setupEnv() {
+  Write-Header "Setting up environment variables"
+  # Reset Environment variables
+  [Environment]::SetEnvironmentVariable("GH_TOKEN", $null, "Machine")
+  [Environment]::SetEnvironmentVariable("GH_USERNAME", $null, "Machine")
+  [Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_ID", $null, "Machine")
+  [Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_SECRET", $null, "Machine")
 
-[Environment]::SetEnvironmentVariable("GH_TOKEN", $null, "User")
-[Environment]::SetEnvironmentVariable("GH_USERNAME", $null, "User")
-[Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_ID", $null, "User")
-[Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_SECRET", $null, "User")
+  [Environment]::SetEnvironmentVariable("GH_TOKEN", $null, "User")
+  [Environment]::SetEnvironmentVariable("GH_USERNAME", $null, "User")
+  [Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_ID", $null, "User")
+  [Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_SECRET", $null, "User")
 
-[System.Environment]::SetEnvironmentVariable("GH_TOKEN", $data.githubToken, "Machine")
-[System.Environment]::SetEnvironmentVariable("GH_USERNAME", $data.githubUsername, "Machine")
-[System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_ID", $data.outstemAwsAccessKeyId, "Machine")
-[System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_SECRET", $data.outstemAwsAccessKeyId, "Machine")
-Write-SuccessMessage "Environment variables are set"
-Write-Output ""
+  # Add environment variables
+  [System.Environment]::SetEnvironmentVariable("GH_TOKEN", $data.githubToken, "Machine")
+  [System.Environment]::SetEnvironmentVariable("GH_USERNAME", $data.githubUsername, "Machine")
+  [System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_ID", $data.outstemAwsAccessKeyId, "Machine")
+  [System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_SECRET", $data.outstemAwsAccessKeyId, "Machine")
+  Write-SuccessMessage "Environment variables are set"
+  Write-Output ""
+}
+
+if ($SkipEnv) {
+  Write-InfoMessage "Skipping Setup for Environment Variables"
+  Write-Output ""
+} else {
+  setupEnv
+}
 
 # Add Chocolatey
 Write-Header "Installing Chocolatey"
@@ -200,26 +212,36 @@ else {
 }
 Write-Output ""
 
-# Enable WSL
-Write-Header "Enabling WSL"
 
-# Check if WSL 2 is already enabled
-$wsl2Enabled = (dism.exe /Online /Get-FeatureInfo /FeatureName:Microsoft-Windows-Subsystem-Linux-WSL2).State
+function setupWSL() {
+  # Enable WSL
+  Write-Header "Enabling WSL"
 
-if ($wsl2Enabled -eq "Enabled") {
+  # Check if WSL 2 is already enabled
+  $wsl2Enabled = (dism.exe /Online /Get-FeatureInfo /FeatureName:Microsoft-Windows-Subsystem-Linux-WSL2).State
+
+  if ($wsl2Enabled -eq "Enabled") {
     Write-Output "WSL 2 is already enabled."
-}
-else {
+  }
+  else {
     dism.exe /Online /Enable-Feature /FeatureName:VirtualMachinePlatform /NoRestart *>$null
-    dism.exe /Online /Enable-Feature /FeatureName:Microsoft-Windows-Subsystem-Linux /NoRestart *>$null
+      dism.exe /Online /Enable-Feature /FeatureName:Microsoft-Windows-Subsystem-Linux /NoRestart *>$null
 
-    wsl --set-default-version 2 *>$null
-    wsl --install --no-launch *>$null
+      wsl --set-default-version 2 *>$null
+      wsl --install --no-launch *>$null
 
-    if ($?) {
+      if ($?) {
         Write-SuccessMessage "WSL 2 enabled successfully."
-    }
-    else {
+      }
+      else {
         Write-ErrorMessage "WSL setup failed."
-    }
+      }
+  }
+}
+
+if ($SkipWSL) {
+  Write-InfoMessage "Skipping WSL Setup"
+  Write-Output ""
+} else {
+  setupWSL
 }
