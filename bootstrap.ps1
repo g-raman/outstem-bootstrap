@@ -1,6 +1,8 @@
 param (
     [switch]$Recommended
+    [string]$test
 )
+Write-Output "$test"
 
 $fileName = "outstem_bootstrap.json"
 $filePath = Join-Path -Path $env:USERPROFILE -ChildPath $fileName
