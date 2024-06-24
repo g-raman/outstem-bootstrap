@@ -14,14 +14,16 @@ else {
     exit
 }
 
+# Convert config file content to JSON object
 $jsonContent = Get-Content -Path $filePath -Raw
 $data = $jsonContent | ConvertFrom-Json
 
 $requiredFields = @("githubEmail", "githubUsername", "githubToken", "outstemAwsAccessKeyId", "outstemAwsAccessKeySecret")
 $missingFields = $requiredFields | Where-Object { $_ -notin $data.PSObject.Properties.Name }
 
+# Ensure all mandatory fields are present
 if ($missingFields.Count -eq 0) {
-    Write-Output "All fields exist."
+    Write-Output "All fields exist. Continuing with setup"
 }
 else {
     Write-Output "The following required fields are missing in your config:"
@@ -29,6 +31,7 @@ else {
     exit
 }
 
+# Setting up SSH
 if ($data.sshKeyLocation -ne $null) {
     ssh-keygen -t ed25519 -C "$data.githubEmail" -f $data.sshKeyLocation
 }
@@ -58,6 +61,7 @@ do {
 } while ($true)
 
 
+# Reset Environment variables
 [Environment]::SetEnvironmentVariable("GH_TOKEN", $null, "Machine")
 [Environment]::SetEnvironmentVariable("GH_USERNAME", $null, "Machine")
 [Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_ID", $null, "Machine")
@@ -73,6 +77,7 @@ do {
 [System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_ID", $data.outstemAwsAccessKeyId, "Machine")
 [System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_SECRET", $data.outstemAwsAccessKeyId, "Machine")
 
+# Add Chocolatey
 Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
 refreshenv
 
@@ -99,6 +104,7 @@ if ($Recommended) {
     $packages += $recommendedPackages
 }
 
+# Install basic packages
 foreach ($package in $packages) {
     Write-Output ""
     Write-Output "========================================"
@@ -116,8 +122,7 @@ foreach ($package in $packages) {
     Write-Output ""
 }
 
-Write-Output "All installations completed."
-
+# Instal Nvm
 Write-Output ""
 Write-Output "========================================"
 Write-Output "Installing node via nvm "
@@ -133,6 +138,7 @@ else {
 Write-Output ""
 
 
+# Setup .npmrc for Outstem CLI
 Write-Output ""
 Write-Output "========================================"
 Write-Output "Configuring .npmrc"
@@ -159,6 +165,7 @@ else {
 }
 Write-Output ""
 
+# Enable WSL
 Write-Output ""
 Write-Output "========================================"
 Write-Output "Enabling WSL"
