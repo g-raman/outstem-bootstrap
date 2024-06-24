@@ -3,7 +3,7 @@ param(
   [switch]$SkipSSH,
   [switch]$SkipEnv,
   [switch]$SkipWSL,
-  [switch]$SkipApps,
+  [switch]$SkipDeps,
   [switch]$SkipRepos
 )
 
@@ -138,7 +138,7 @@ function setupEnv () {
 
 Invoke-CommandIf $SkipEnv "Skipping Environment variable Setup" "setupEnv"
 
-function setupApps () {
+function setupDeps () {
   # Add Chocolatey
   Write-Header "Installing Chocolatey"
   Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
@@ -231,7 +231,7 @@ function setupApps () {
   Write-Output ""
 }
 
-Invoke-CommandIf $SkipApps "Skipping installation of dependencies" "setupApps"
+Invoke-CommandIf $SkipDeps "Skipping installation of dependencies" "setupDeps"
 refreshenv *> $null
 
 function setupRepos () {
