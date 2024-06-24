@@ -52,16 +52,16 @@ function Invoke-CommandIf {
   }
 }
 
-function Write-MessageIfError() {
+function Write-MessageIfError () {
   param(
     [string]$successMessage,
     [string]$errorMessage
   )
 
   if ($?) {
-    Write-SuccessMessage $successMessage 
+    Write-SuccessMessage $successMessage
   } else {
-    Write-ErrorMessage $errorMessage 
+    Write-ErrorMessage $errorMessage
   }
   Write-Output ""
 }
@@ -258,3 +258,4 @@ function setupWSL () {
 }
 
 Invoke-CommandIf $SkipWSL "Skipping WSL setup" "setupWSL"
+
