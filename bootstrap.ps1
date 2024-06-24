@@ -126,7 +126,7 @@ else {
 }
 
 # List of packages to install
-$basePackages = @('git', 'openjdk11', 'maven', 'ruby', 'docker')
+$basePackages = @('git', 'nvm', 'openjdk11', 'maven', 'ruby', 'docker')
 $recommendedPackages = @('tabby', 'intellijidea-community', 'dbeaver', 'vscode')
 
 $packages = $basePackages
@@ -151,21 +151,11 @@ foreach ($package in $packages) {
 }
 refreshenv *>$null
 
-Write-Header "Installing NVM"
-choco install -y nvm --version=1.1.11 --pin
-if ($?) {
-  Write-SuccessMessage "NVM installation succeeded."
-}
-else {
-  Write-ErrorMessage "NVM installation failed."
-}
-Write-Output ""
-
 
 # Instal Nvm
 Write-Header "Installing node via nvm "
-nvm install latest *>$null
-nvm use latest *>$null
+nvm install latest
+nvm use latest
 
 if ($?) {
     Write-SuccessMessage "node installation succeeded."
