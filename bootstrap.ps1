@@ -63,7 +63,8 @@ Write-Header "Setting up SSH"
 ssh-keygen -t ed25519 -C $data.githubEmail
 Write-Output ""
 Write-Output "Add this key below to your GitHub account"
-$sshKeyFile = $data.sshKeyLocation + ".pub"
+$sshKeyFile = Join-Path -Path $env:USERPROFILE -ChildPath ".ssh/id_ed25519.pub"
+
 cat $sshKeyFile
 Write-Output ""
 
