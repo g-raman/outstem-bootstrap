@@ -52,6 +52,20 @@ function Invoke-CommandIf {
   }
 }
 
+function Write-MessageIfError() {
+  param(
+    [string]$successMessage,
+    [string]$errorMessage
+  )
+
+  if ($?) {
+    Write-SuccessMessage $successMessage 
+  } else {
+    Write-ErrorMessage $errorMessage 
+  }
+  Write-Output ""
+}
+
 $fileName = "outstem_bootstrap.json"
 $filePath = Join-Path -Path $env:USERPROFILE -ChildPath $fileName
 
@@ -173,13 +187,7 @@ function setupDeps () {
 
     choco install $package -y *> $null
 
-    if ($?) {
-      Write-SuccessMessage "$package installation succeeded."
-    }
-    else {
-      Write-ErrorMessage "$package installation failed."
-    }
-    Write-Output ""
+    Write-MessageIfError "$package installation succeeded" "$package installation failed"
   }
   refreshenv *> $null
 
@@ -189,13 +197,7 @@ function setupDeps () {
   nvm install latest
   nvm use latest
 
-  if ($?) {
-    Write-SuccessMessage "node installation succeeded."
-  }
-  else {
-    Write-ErrorMessage "node installation failed."
-  }
-  Write-Output ""
+  Write-MessageIfError "Node installation succeeded" "Node installation failed"
   refreshenv *> $null
 
   # Setup .npmrc for Outstem CLI
@@ -206,29 +208,17 @@ function setupDeps () {
     //npm.pkg.github.com/:_authToken=" + $data.githubToken
 
   Add-Content -Path $npmrcFilepath -Value $npmrcConfig
-  Write-SuccessMessage ".npmrc configured"
+  Write-MessageIfError "npmrc setup succeeded" "npmrc setup failed"
 
   Write-Header "Install Oustem CLI"
   npm i -g @aes-outreach/outstem-cli *> $null
 
-  if ($?) {
-    Write-SuccessMessage "Outstem CLI installation succeeded."
-  }
-  else {
-    Write-ErrorMessage "Outstem CLI installation failed."
-  }
-  Write-Output ""
+  Write-MessageIfError "Oustem CLI installation succeeded" "Outstem CLI installation failed"
 
   Write-Header "Installing Yarn"
   npm i -g yarn *> $null
 
-  if ($?) {
-    Write-SuccessMessage "Yarn installed successfully"
-  }
-  else {
-    Write-ErrorMessage "Yarn installation failed"
-  }
-  Write-Output ""
+  Write-MessageIfError "Yarn installed successfully" "Yarn installation failed"
 }
 
 Invoke-CommandIf $SkipDeps "Skipping installation of dependencies" "setupDeps"
@@ -263,12 +253,7 @@ function setupWSL () {
     wsl --set-default-version 2 *> $null
     wsl --install --no-launch *> $null
 
-    if ($?) {
-      Write-SuccessMessage "WSL 2 enabled successfully."
-    }
-    else {
-      Write-ErrorMessage "WSL setup failed."
-    }
+    Write-MessageIfError "WSL 2 enabled successfulyy" "WSL setup failed"
   }
 }
 
