@@ -1,5 +1,5 @@
 param (
-    [switch]$Recommended
+    [switch]$Recommended,
     [string]$test
 )
 Write-Output "$test"
