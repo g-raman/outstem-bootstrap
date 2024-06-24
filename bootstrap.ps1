@@ -32,14 +32,7 @@ else {
 }
 
 # Setting up SSH
-if ($data.sshKeyLocation -ne $null) {
-    ssh-keygen -t ed25519 -C "$data.githubEmail" -f $data.sshKeyLocation
-}
-else {
-    $data | Add-Member -MemberType NoteProperty -Name "sshKeyLocation" -Value "$env:USERPROFILE/.ssh/id_ed25519"
-}
-
-ssh-keygen -t ed25519 -C $data.githubEmail -f $data.sshKeyLocation
+ssh-keygen -t ed25519 -C $data.githubEmail
 Write-Output ""
 Write-Output "Add this key below to your GitHub account"
 $sshKeyFile = $data.sshKeyLocation + ".pub"
@@ -47,17 +40,13 @@ cat $sshKeyFile
 Write-Output ""
 
 do {
-    $userInput = Read-Host "Type anything to test your connection"
-    
-    ssh -T git@github.com
-    
-    if ($LASTEXITCODE) {
-        Write-Output "Succesfully authenticated"
+    $userInput = Read-Host "Type anything to test your connection or 'c' to continue"
+    if ($userInput -ieq "c") {
+        Write-Output "Continuing with installation"
         break
     }
-    else {
-        Write-Output "Error: Authentication failed"
-    }
+
+    ssh -T git@github.com
 } while ($true)
 
 
