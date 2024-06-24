@@ -16,6 +16,13 @@ function Write-ErrorMessage {
     Write-Host $Message -ForegroundColor Red
 }
 
+function Write-InfoMessage {
+    param (
+        [string]$Message
+    )
+    Write-Host $Message -ForegroundColor Cyan
+}
+
 function Write-Header {
     param (
       [string]$Message
@@ -65,10 +72,11 @@ Write-Output ""
 Write-Output "Add this key below to your GitHub account"
 $sshKeyFile = Join-Path -Path $env:USERPROFILE -ChildPath ".ssh/id_ed25519.pub"
 
-cat $sshKeyFile
-Write-Output ""
+$sshKey = Get-Content "$sshKeyFile" -Raw
+Write-InfoMessage $sshKey
 
 do {
+    Write-Output ""
     $userInput = Read-Host "Type anything to test your connection or 'c' to continue"
     if ($userInput -ieq "c") {
         Write-Output "Continuing with installation"
@@ -77,6 +85,7 @@ do {
 
     ssh -T git@github.com
 } while ($true)
+Write-Output ""
 
 
 Write-Header "Setting up environment variables"
@@ -96,11 +105,12 @@ Write-Header "Setting up environment variables"
 [System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_ID", $data.outstemAwsAccessKeyId, "Machine")
 [System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_SECRET", $data.outstemAwsAccessKeyId, "Machine")
 Write-SuccessMessage "Environment variables are set"
+Write-Output ""
 
 # Add Chocolatey
 Write-Header "Installing Chocolatey"
 Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
-refreshenv
+refreshenv *>$null
 
 # Set execution policy to allow script running
 Set-ExecutionPolicy Bypass -Scope Process -Force
@@ -116,7 +126,7 @@ else {
 }
 
 # List of packages to install
-$basePackages = @('git', 'nvm', 'openjdk11', 'maven', 'ruby', 'docker')
+$basePackages = @('git', 'openjdk11', 'maven', 'ruby', 'docker')
 $recommendedPackages = @('tabby', 'intellijidea-community', 'dbeaver', 'vscode')
 
 $packages = $basePackages
@@ -139,9 +149,22 @@ foreach ($package in $packages) {
     }
     Write-Output ""
 }
+refreshenv *>$null
+
+Write-Header "Installing NVM"
+choco install -y nvm --version=1.1.11 --pin
+if ($?) {
+  Write-SuccessMessage "NVM installation succeeded."
+}
+else {
+  Write-ErrorMessage "NVM installation failed."
+}
+Write-Output ""
+
 
 # Instal Nvm
 Write-Header "Installing node via nvm "
+nvm install latest *>$null
 nvm use latest *>$null
 
 if ($?) {
@@ -151,7 +174,7 @@ else {
     Write-ErrorMessage "node installation failed."
 }
 Write-Output ""
-
+refreshenv *>$null
 
 # Setup .npmrc for Outstem CLI
 Write-Header "Configuring .npmrc"
