@@ -1,18 +1,43 @@
 param (
-    [switch]$Recommended,
+    [switch]$Recommended
 )
+
+function Write-SuccessMessage {
+    param (
+        [string]$Message
+    )
+    Write-Host $Message -ForegroundColor Green
+}
+
+function Write-ErrorMessage {
+    param (
+        [string]$Message
+    )
+    Write-Host $Message -ForegroundColor Red
+}
+
+function Write-Header {
+    param (
+      [string]$Message
+    )
+    Write-Output "========================================"
+    Write-Output "$Message"
+    Write-Output "========================================"
+}
 
 $fileName = "outstem_bootstrap.json"
 $filePath = Join-Path -Path $env:USERPROFILE -ChildPath $fileName
 
 # Check if config file exists
+Write-Header "Looking for config file"
 if (Test-Path $filePath) {
-    Write-Output "Config File found at: $filePath"
+  Write-SuccessMessage "Config file found at: $filePath"
 }
 else {
-    Write-Output "Error: Outstem bootstrap config file not found in the home directory."
+    Write-ErrorMessage "Error: Outstem bootstrap config file not found in the home directory."
     exit
 }
+Write-Output ""
 
 # Convert config file content to JSON object
 $jsonContent = Get-Content -Path $filePath -Raw
@@ -22,16 +47,19 @@ $requiredFields = @("githubEmail", "githubUsername", "githubToken", "outstemAwsA
 $missingFields = $requiredFields | Where-Object { $_ -notin $data.PSObject.Properties.Name }
 
 # Ensure all mandatory fields are present
+Write-Header "Ensuring all fields Exist"
 if ($missingFields.Count -eq 0) {
-    Write-Output "All fields exist. Continuing with setup"
+    Write-SuccessMessage "All fields exist. Continuing with setup"
 }
 else {
-    Write-Output "The following required fields are missing in your config:"
+    Write-ErrorMessage "The following required fields are missing in your config:"
     Write-Output "$($missingFields -join ', ')."
     exit
 }
+Write-Output ""
 
 # Setting up SSH
+Write-Header "Setting up SSH"
 ssh-keygen -t ed25519 -C $data.githubEmail
 Write-Output ""
 Write-Output "Add this key below to your GitHub account"
@@ -50,6 +78,7 @@ do {
 } while ($true)
 
 
+Write-Header "Setting up environment variables"
 # Reset Environment variables
 [Environment]::SetEnvironmentVariable("GH_TOKEN", $null, "Machine")
 [Environment]::SetEnvironmentVariable("GH_USERNAME", $null, "Machine")
@@ -65,8 +94,10 @@ do {
 [System.Environment]::SetEnvironmentVariable("GH_USERNAME", $data.githubUsername, "Machine")
 [System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_ID", $data.outstemAwsAccessKeyId, "Machine")
 [System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_SECRET", $data.outstemAwsAccessKeyId, "Machine")
+Write-SuccessMessage "Environment variables are set"
 
 # Add Chocolatey
+Write-Header "Installing Chocolatey"
 Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
 refreshenv
 
@@ -75,13 +106,12 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 
 # Install Chocolatey if not already installed
 if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
-    Write-Output "Installing Chocolatey..."
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
     iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-    Write-Output "Chocolatey installation completed."
+    Write-SuccessMessage "Chocolatey installation completed."
 }
 else {
-    Write-Output "Chocolatey is already installed."
+    Write-SuccessMessage "Chocolatey is already installed."
 }
 
 # List of packages to install
@@ -96,69 +126,55 @@ if ($Recommended) {
 # Install basic packages
 foreach ($package in $packages) {
     Write-Output ""
-    Write-Output "========================================"
-    Write-Output "Installing $package..."
-    Write-Output "========================================"
+    Write-Header "Install $package..."
     
     choco install $package -y *>$null
 
     if ($?) {
-        Write-Output "$package installation succeeded."
+        Write-SuccessMessage "$package installation succeeded."
     }
     else {
-        Write-Output "$package installation failed."
+        Write-ErrorMessage "$package installation failed."
     }
     Write-Output ""
 }
 
 # Instal Nvm
-Write-Output ""
-Write-Output "========================================"
-Write-Output "Installing node via nvm "
-Write-Output "========================================"
+Write-Header "Installing node via nvm "
 nvm use latest *>$null
 
 if ($?) {
-    Write-Output "node installation succeeded."
+    Write-SuccessMessage "node installation succeeded."
 }
 else {
-    Write-Output "node installation failed."
+    Write-ErrorMessage "node installation failed."
 }
 Write-Output ""
 
 
 # Setup .npmrc for Outstem CLI
-Write-Output ""
-Write-Output "========================================"
-Write-Output "Configuring .npmrc"
-Write-Output "========================================"
+Write-Header "Configuring .npmrc"
 $npmrcFilename = ".npmrc"
 $npmrcFilepath = Join-Path -Path $env:USERPROFILE -ChildPath $npmrcFilename
 $npmrcConfig = "@aes-outreach:registry=https://npm.pkg.github.com/
 //npm.pkg.github.com/:_authToken=" + $data.githubToken
 
 Add-Content -Path $npmrcFilepath -Value $npmrcConfig
-Write-Output ".npmrc configured"
+Write-SuccessMessage ".npmrc configured"
 
-Write-Output ""
-Write-Output "========================================"
-Write-Output "Install Oustem CLI"
-Write-Output "========================================"
+Write-Header "Install Oustem CLI"
 npm i -g @aes-outreach/outstem-cli *>$null
 
 if ($?) {
-    Write-Output "Outstem CLI installation succeeded."
+    Write-SuccessMessage "Outstem CLI installation succeeded."
 }
 else {
-    Write-Output "Outstem CLI installation failed."
+    Write-ErrorMessage "Outstem CLI installation failed."
 }
 Write-Output ""
 
 # Enable WSL
-Write-Output ""
-Write-Output "========================================"
-Write-Output "Enabling WSL"
-Write-Output "========================================"
+Write-Header "Enabling WSL"
 
 # Check if WSL 2 is already enabled
 $wsl2Enabled = (dism.exe /Online /Get-FeatureInfo /FeatureName:Microsoft-Windows-Subsystem-Linux-WSL2).State
@@ -174,9 +190,9 @@ else {
     wsl --install --no-launch *>$null
 
     if ($?) {
-        Write-Output "WSL 2 enabled successfully."
+        Write-SuccessMessage "WSL 2 enabled successfully."
     }
     else {
-        Write-Output "WSL setup failed."
+        Write-ErrorMessage "WSL setup failed."
     }
 }
