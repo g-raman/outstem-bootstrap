@@ -1,5 +1,6 @@
 param (
-    [switch]$Recommended
+    [switch]$Recommended,
+    [switch]$SkipSSH
 )
 
 function Write-SuccessMessage {
@@ -66,29 +67,38 @@ else {
 Write-Output ""
 
 # Setting up SSH
-Write-Header "Setting up SSH"
-ssh-keygen -t ed25519 -C $data.githubEmail
-Write-Output ""
-
-Write-Output "On GitHub, go to Settings > SSH and GPG keys > New SSH key."
-Write-Output "Add a title to describe the key like 'Work laptop'"
-Write-Output "Paste the key below in the 'key' area and add the key."
-
-$sshKeyFile = Join-Path -Path $env:USERPROFILE -ChildPath ".ssh/id_ed25519.pub"
-$sshKey = Get-Content "$sshKeyFile" -Raw
-Write-InfoMessage $sshKey
-
-do {
+function setupSSH() {
+  Write-Header "Setting up SSH"
+    ssh-keygen -t ed25519 -C $data.githubEmail
     Write-Output ""
-    $userInput = Read-Host "Type anything to test your connection or 'c' to continue"
-    if ($userInput -ieq "c") {
-        Write-Output "Continuing with installation"
-        break
-    }
 
-    ssh -T git@github.com
-} while ($true)
-Write-Output ""
+    Write-Output "On GitHub, go to Settings > SSH and GPG keys > New SSH key."
+    Write-Output "Add a title to describe the key like 'Work laptop'"
+    Write-Output "Paste the key below in the 'key' area and add the key."
+
+    $sshKeyFile = Join-Path -Path $env:USERPROFILE -ChildPath ".ssh/id_ed25519.pub"
+    $sshKey = Get-Content "$sshKeyFile" -Raw
+    Write-InfoMessage $sshKey
+
+    do {
+      Write-Output ""
+        $userInput = Read-Host "Type anything to test your connection or 'c' to continue"
+        if ($userInput -ieq "c") {
+          Write-Output "Continuing with installation"
+            break
+        }
+
+      ssh -T git@github.com
+    } while ($true)
+  Write-Output ""
+}
+
+if ($SkipSSH) {
+  Write-InfoMessage "Skipping SSH Setup"
+  Write-Output ""
+} else {
+  setupSSH
+}
 
 
 Write-Header "Setting up environment variables"
