@@ -3,7 +3,8 @@ param(
   [switch]$SkipSSH,
   [switch]$SkipEnv,
   [switch]$SkipWSL,
-  [switch]$SkipApps
+  [switch]$SkipApps,
+  [switch]$SkipRepos
 )
 
 function Write-SuccessMessage {
@@ -213,6 +214,17 @@ function setupApps () {
     Write-ErrorMessage "Outstem CLI installation failed."
   }
   Write-Output ""
+
+  Write-Header "Installing Yarn"
+  npm i -g yarn *> $null
+
+  if ($?) {
+    Write-SuccessMessage "Yarn installed successfully"
+  }
+  else {
+    Write-ErrorMessage "Yarn installation failed"
+  }
+  Write-Output ""
 }
 
 if ($SkipApps) {
@@ -221,7 +233,24 @@ if ($SkipApps) {
 } else {
   setupApps
 }
+refreshenv *> $null
 
+function setupRepos () {
+  Write-Header "Setting up outreach codebase"
+  $outreachPath = Join-Path -Path $env:USERPROFILE -ChildPath "outstem"
+  if (-not (Test-Path -Path $outreachPath)) {
+    mkdir $outreachPath
+  }
+  Set-Location $outreachPath
+  outstem init
+}
+
+if ($SkipRepos) {
+  Write-InfoMessage "Skipping WSL Setup"
+  Write-Output ""
+} else {
+  setupRepos
+}
 
 function setupWSL () {
   # Enable WSL
