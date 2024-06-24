@@ -121,7 +121,7 @@ function setupSSH () {
       break
     }
 
-    ssh -t git@github.com
+    ssh -T git@github.com
   } while ($true)
   Write-Output ""
 }
