@@ -68,41 +68,58 @@ function Write-MessageIfError () {
 
 $fileName = "outstem_bootstrap.json"
 $filePath = Join-Path -Path $env:USERPROFILE -ChildPath $fileName
+$shouldAskForValues = $true
 
 # Check if config file exists
 Write-Header "Looking for config file"
 if (Test-Path $filePath) {
   Write-SuccessMessage "Config file found at: $filePath"
-}
-else {
-  Write-ErrorMessage "Error: Outstem bootstrap config file not found in the home directory."
-  exit
+  $shouldAskForValues = $false
 }
 Write-Output ""
 
-# Convert config file content to JSON object
-$jsonContent = Get-Content -Path $filePath -Raw
-$data = $jsonContent | ConvertFrom-Json
+$githubUsername = ""
+$githubEmail = ""
+$githubToken = ""
+$outstemAwsAccessKeyId = ""
+$outstemAwsAccessKeySecret = ""
 
-$requiredFields = @("githubEmail","githubUsername","githubToken","outstemAwsAccessKeyId","outstemAwsAccessKeySecret")
-$missingFields = $requiredFields | Where-Object { $_ -notin $data.PSObject.Properties.Name }
+if (-not ($shouldAskForValues)) {
+  # Convert config file content to JSON object
+  $jsonContent = Get-Content -Path $filePath -Raw
+  $data = $jsonContent | ConvertFrom-Json
 
-# Ensure all mandatory fields are present
-Write-Header "Ensuring all fields Exist"
-if ($missingFields.Count -eq 0) {
-  Write-SuccessMessage "All fields exist. Continuing with setup"
+  $requiredFields = @("githubEmail","githubUsername","githubToken","outstemAwsAccessKeyId","outstemAwsAccessKeySecret")
+  $missingFields = $requiredFields | Where-Object { $_ -notin $data.PSObject.Properties.Name }
+
+  # Ensure all mandatory fields are present
+  Write-Header "Ensuring all fields Exist"
+  if ($missingFields.Count -eq 0) {
+    Write-SuccessMessage "All fields exist. Continuing with setup"
+    $githubUsername = $data.githubUsername
+    $githubEmail = $data.githubEmail
+    $githubToken = $data.githubToken
+    $outstemAwsAccessKeyId = $data.outstemAwsAccessKeyId
+    $outstemAwsAccessKeySecret = $data.outstemAwsAccessKeySecret
+  }
+  else {
+    Write-ErrorMessage "The following required fields are missing in your config:"
+    Write-ErrorMessage "$($missingFields -join ', ')."
+    exit
+  }
+  Write-Output ""
+} else {
+  $githubUsername = Read-Host "Type in your github username"
+  $githubEmail = Read-Host "Type in your github email"
+  $githubToken = Read-Host "Type in your github token"
+  $outstemAwsAccessKeyId = Read-Host "Type in your AWS Access Key Id"
+  $outstemAwsAccessKeySecret = Read-Host "Type in your AWS Access Key Secret"
 }
-else {
-  Write-ErrorMessage "The following required fields are missing in your config:"
-  Write-ErrorMessage "$($missingFields -join ', ')."
-  exit
-}
-Write-Output ""
 
 # Setting up SSH
 function setupSSH () {
   Write-Header "Setting up SSH"
-  ssh-keygen -t ed25519 -C $data.githubEmail
+  ssh-keygen -t ed25519 -C $githubEmail
   Write-Output ""
 
   Write-Output "On GitHub, go to Settings > SSH and GPG keys > New SSH key."
@@ -121,7 +138,7 @@ function setupSSH () {
       break
     }
 
-    ssh -T git@github.com
+    ssh -t git@github.com
   } while ($true)
   Write-Output ""
 }
@@ -142,10 +159,10 @@ function setupEnv () {
   [Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_SECRET",$null,"User")
 
   # Add environment variables
-  [System.Environment]::SetEnvironmentVariable("GH_TOKEN",$data.githubToken,"Machine")
-  [System.Environment]::SetEnvironmentVariable("GH_USERNAME",$data.githubUsername,"Machine")
-  [System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_ID",$data.outstemAwsAccessKeyId,"Machine")
-  [System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_SECRET",$data.outstemAwsAccessKeyId,"Machine")
+  [System.Environment]::SetEnvironmentVariable("GH_TOKEN",$githubToken,"Machine")
+  [System.Environment]::SetEnvironmentVariable("GH_USERNAME",$githubUsername,"Machine")
+  [System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_ID",$outstemAwsAccessKeyId,"Machine")
+  [System.Environment]::SetEnvironmentVariable("OUTSTEM_AWS_ACCESS_KEY_SECRET",$outstemAwsAccessKeyId,"Machine")
   Write-SuccessMessage "Environment variables are set"
   Write-Output ""
 }
@@ -205,7 +222,7 @@ function setupDeps () {
   $npmrcFilename = ".npmrc"
   $npmrcFilepath = Join-Path -Path $env:USERPROFILE -ChildPath $npmrcFilename
   $npmrcConfig = "@aes-outreach:registry=https://npm.pkg.github.com/
-    //npm.pkg.github.com/:_authToken=" + $data.githubToken
+    //npm.pkg.github.com/:_authToken=" + $githubToken
 
   Add-Content -Path $npmrcFilepath -Value $npmrcConfig
   Write-MessageIfError "npmrc setup succeeded" "npmrc setup failed"
