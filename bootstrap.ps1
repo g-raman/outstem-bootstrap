@@ -37,6 +37,21 @@ function Write-Header {
   Write-Output "========================================"
 }
 
+function Invoke-CommandIf {
+  param(
+    [boolean]$condition,
+    [string]$message,
+    [string]$command
+  )
+
+  if ($condition) {
+    Write-InfoMessage $message
+    Write-Output ""
+  } else {
+    Invoke-Expression $command
+  }
+}
+
 $fileName = "outstem_bootstrap.json"
 $filePath = Join-Path -Path $env:USERPROFILE -ChildPath $fileName
 
@@ -97,13 +112,7 @@ function setupSSH () {
   Write-Output ""
 }
 
-if ($SkipSSH) {
-  Write-InfoMessage "Skipping SSH Setup"
-  Write-Output ""
-} else {
-  setupSSH
-}
-
+Invoke-CommandIf $SkipSSH "Skipping SSH Setup" "setupSSH"
 
 function setupEnv () {
   Write-Header "Setting up environment variables"
@@ -127,12 +136,7 @@ function setupEnv () {
   Write-Output ""
 }
 
-if ($SkipEnv) {
-  Write-InfoMessage "Skipping Setup for Environment Variables"
-  Write-Output ""
-} else {
-  setupEnv
-}
+Invoke-CommandIf $SkipEnv "Skipping Environment variable Setup" "setupEnv"
 
 function setupApps () {
   # Add Chocolatey
@@ -227,12 +231,7 @@ function setupApps () {
   Write-Output ""
 }
 
-if ($SkipApps) {
-  Write-InfoMessage "Skipping installation of apps"
-  Write-Output ""
-} else {
-  setupApps
-}
+Invoke-CommandIf $SkipApps "Skipping installation of dependencies" "setupApps"
 refreshenv *> $null
 
 function setupRepos () {
@@ -245,12 +244,7 @@ function setupRepos () {
   outstem init
 }
 
-if ($SkipRepos) {
-  Write-InfoMessage "Skipping WSL Setup"
-  Write-Output ""
-} else {
-  setupRepos
-}
+Invoke-CommandIf $SkipRepos "Skipping Codebase setup" "setupRepos"
 
 function setupWSL () {
   # Enable WSL
@@ -278,9 +272,4 @@ function setupWSL () {
   }
 }
 
-if ($SkipWSL) {
-  Write-InfoMessage "Skipping WSL Setup"
-  Write-Output ""
-} else {
-  setupWSL
-}
+Invoke-CommandIf $SkipWSL "Skipping WSL setup" "setupWSL"
