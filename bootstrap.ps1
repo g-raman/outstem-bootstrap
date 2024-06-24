@@ -151,7 +151,13 @@ Write-Output "Install Oustem CLI"
 Write-Output "========================================"
 npm i -g @aes-outreach/outstem-cli *>$null
 
-Write-Output "Outstem CLI installed"
+if ($?) {
+    Write-Output "Outstem CLI installation succeeded."
+}
+else {
+    Write-Output "Outstem CLI installation failed."
+}
+Write-Output ""
 
 Write-Output ""
 Write-Output "========================================"
