@@ -75,6 +75,8 @@ Write-Header "Looking for config file"
 if (Test-Path $filePath) {
   Write-SuccessMessage "Config file found at: $filePath"
   $shouldAskForValues = $false
+} else {
+  Write-ErrorMessage "Config file not found. Manually enter details."
 }
 Write-Output ""
 
