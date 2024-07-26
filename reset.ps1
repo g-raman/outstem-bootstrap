@@ -45,7 +45,6 @@ function Write-MessageIfError () {
 }
 
 # Uninstall all packages
-Write-Header "Uninstall packages"
 Write-Header "Uninstalling packages"
 $packages = @('git','nvm','openjdk11','maven','ruby','docker', 'tabby','intellijidea-community','dbeaver','vscode')
 foreach ($package in $packages) {
@@ -77,4 +76,4 @@ Write-Header "Clearing SSH keys"
 $homePath = [System.Environment]::GetFolderPath("UserProfile")
 $sshPath = Join-path -Path $homePath -ChildPath ".ssh\*"
 Remove-Item -Path $sshPath -Force -Recurse
-Write-MessageIfError "Something went wrong when removing ssh keys" "SSH keys removed successfully"
+Write-MessageIfError "SSH keys removed successfully" "Something went wrong when removing ssh keys" 
