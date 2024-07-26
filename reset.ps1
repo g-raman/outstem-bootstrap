@@ -46,12 +46,15 @@ function Write-MessageIfError () {
 
 # Uninstall all packages
 Write-Header "Uninstall packages"
+Write-Header "Uninstalling packages"
 $packages = @('git','nvm','openjdk11','maven','ruby','docker', 'tabby','intellijidea-community','dbeaver','vscode')
 foreach ($package in $packages) {
   Write-Output ""
   Write-Header "Uninstalling $package..."
 
-  choco uninstall $package -y *> $null
+  # -y agrees to all questions
+  # -x removes all dependencies
+  choco uninstall $package -y -x *> $null
 
   Write-MessageIfError "$package uninstallation succeeded" "$package uninstallation failed"
 }
