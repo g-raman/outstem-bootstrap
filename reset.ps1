@@ -76,12 +76,3 @@ Write-Header "Clearing SSH keys"
 $homePath = [System.Environment]::GetFolderPath("UserProfile")
 $sshPath = Join-path -Path $homePath -ChildPath ".ssh\*"
 Remove-Item -Path $sshPath -Force -Recurse
-Write-MessageIfError "SSH keys removed successfully" "Something went wrong when removing ssh keys" 
-
-Write-Header "Disabling WSL"
-$distros = wsl --list --quiet
-foreach ($distro in $distros) {
-  wsl --unregister $distro
-  Write-InfoMessage "Removing $distro" 
-}
-Disable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux -NoRestart
