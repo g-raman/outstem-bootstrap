@@ -260,7 +260,7 @@ function addSettingsXMLFile () {
   Write-Header "Adding settings.xml to .m2 folder"
 
   $outstemConfigFileName = ".outstem/outstem-config.json"
-  $outstemConfigFilePath = Join-Path -Path $env:USERPROFILE -ChildPath $fileName
+  $outstemConfigFilePath = Join-Path -Path $env:USERPROFILE -ChildPath $outstemConfigFileName
   
   if (Test-Path $outstemConfigFilePath) {
     Write-SuccessMessage "Outstem config file found"
@@ -273,17 +273,29 @@ function addSettingsXMLFile () {
   $outstemConfigData = $outstemConfigJson | ConvertFrom-Json
 
   $outstemConfigRequiredFields = @("reposDir")
-  $outstem = $outstemConfigRequiredFields | Where-Object { $_ -notin $outstemConfigData.PSObject.Properties.Name }
+  $outstemMissingFields = $outstemConfigRequiredFields | Where-Object { $_ -notin $outstemConfigData.PSObject.Properties.Name }
 
-  if ($missingFields.Count -eq 0) {
+  if ($outstemMissingFields.Count -eq 0) {
     Write-SuccessMessage "All fields exist. Continuing with setup"
   } else {
     Write-ErrorMessage "The following required fields are missing in your outstem config:"
-    Write-ErrorMessage "$($missingFields -join ', ')."
+    Write-ErrorMessage "$($outstemMissingFields -join ', ')."
     return
   }
 
-  Write-Host $outstemConfigData.reposDir
+  $settingsFilePath = $outstemConfigData.reposDir + "/" + "Outreach-Docker/software/assets/settings.xml"
+
+  if (Test-Path $settingsFilePath) {
+    Write-SuccessMessage "A settings.xml file was found"
+  } else {
+    Write-ErrorMessage "No settings.xml file found"
+    return
+  }
+
+  $m2Dir = Join-Path -Path $env:USERPROFILE -ChildPath ".m2"
+  
+  Copy-Item -Path $settingsFilePath -Destination $m2Dir
+  Write-MessageIfError "Copied settings.xml into .m2 folder" "Copying settings.xml failed"
 }
 
 Invoke-CommandIf $SkipSettingsXML "Skipping Copying of settings.xml file" "addSettingsXMLFile"
