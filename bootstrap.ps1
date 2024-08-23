@@ -4,7 +4,8 @@ param(
   [switch]$SkipEnv,
   [switch]$SkipWSL,
   [switch]$SkipDeps,
-  [switch]$SkipRepos
+  [switch]$SkipRepos,
+  [switch]$SkipSettingsXML
 )
 
 function Write-SuccessMessage {
@@ -255,7 +256,7 @@ function setupRepos () {
 
 Invoke-CommandIf $SkipRepos "Skipping Codebase setup" "setupRepos"
  
-function addSettingsXMLFile() {
+function addSettingsXMLFile () {
   Write-Header "Adding settings.xml to .m2 folder"
 
   $outstemConfigFileName = ".outstem/outstem-config.json"
@@ -282,7 +283,8 @@ function addSettingsXMLFile() {
     return
   }
 
-  echo $outstemConfigData.reposDir
+  Write-Host $outstemConfigData.reposDir
 }
 
-addSettingsXMLFile()
+Invoke-CommandIf $SkipSettingsXML "Skipping Copying of settings.xml file" "addSettingsXMLFile"
+
