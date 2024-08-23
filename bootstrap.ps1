@@ -255,25 +255,3 @@ function setupRepos () {
 
 Invoke-CommandIf $SkipRepos "Skipping Codebase setup" "setupRepos"
 
-function setupWSL () {
-  # Enable WSL
-  Write-Header "Enabling WSL"
-
-  # Check if WSL 2 is already enabled
-  $wsl2Enabled = wsl --list --verbose | Select-String -Pattern "2"
-
-  if ($wsl2Enabled) {
-    Write-Output "WSL 2 is already enabled."
-  } else {
-    dism.exe /Online /Enable-Feature /FeatureName:VirtualMachinePlatform /NoRestart *> $null
-    dism.exe /Online /Enable-Feature /FeatureName:Microsoft-Windows-Subsystem-Linux /NoRestart *> $null
-
-    wsl --set-default-version 2 *> $null
-    wsl --install --no-launch *> $null
-
-    Write-MessageIfError "WSL 2 enabled successfuly" "WSL setup failed"
-  }
-}
-
-Invoke-CommandIf $SkipWSL "Skipping WSL setup" "setupWSL"
-
