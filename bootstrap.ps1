@@ -254,4 +254,35 @@ function setupRepos () {
 }
 
 Invoke-CommandIf $SkipRepos "Skipping Codebase setup" "setupRepos"
+ 
+function addSettingsXMLFile() {
+  Write-Header "Adding settings.xml to .m2 folder"
 
+  $outstemConfigFileName = ".outstem/outstem-config.json"
+  $outstemConfigFilePath = Join-Path -Path $env:USERPROFILE -ChildPath $fileName
+  
+  if (Test-Path $outstemConfigFilePath) {
+    Write-SuccessMessage "Outstem config file found"
+  } else {
+    Write-ErrorMessage "No outstem config file found"
+    return
+  }
+
+  $outstemConfigJson = Get-Content -Path $outstemConfigFilePath -Raw
+  $outstemConfigData = $outstemConfigJson | ConvertFrom-Json
+
+  $outstemConfigRequiredFields = @("reposDir")
+  $outstem = $outstemConfigRequiredFields | Where-Object { $_ -notin $outstemConfigData.PSObject.Properties.Name }
+
+  if ($missingFields.Count -eq 0) {
+    Write-SuccessMessage "All fields exist. Continuing with setup"
+  } else {
+    Write-ErrorMessage "The following required fields are missing in your outstem config:"
+    Write-ErrorMessage "$($missingFields -join ', ')."
+    return
+  }
+
+  echo $outstemConfigData.reposDir
+}
+
+addSettingsXMLFile()
