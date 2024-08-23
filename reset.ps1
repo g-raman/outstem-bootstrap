@@ -76,4 +76,4 @@ Write-Header "Clearing SSH keys"
 $homePath = [System.Environment]::GetFolderPath("UserProfile")
 $sshPath = Join-path -Path $homePath -ChildPath ".ssh\*"
 Remove-Item -Path $sshPath -Force -Recurse
-Write-MessageIfError "Something went wrong when removing ssh keys" "SSH keys removed successfully" 
+Write-MessageIfError "SSH keys removed successfully" "Something went wrong when removing ssh keys"
